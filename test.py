@@ -20,7 +20,7 @@ while True:
 	# Get value from temperature sensor
 	[t,h]=[0,0]
 	[t,h] = dht(temperature_sensor,0)
-	print("Jordfukt=" , soil , "\t Luftfukt=" , h , "\t Temp=" , t)
+	print "Jordfukt=" , soil , "\t Luftfukt=" , h , "\t Temp=" , t
 
 	if soil<500:
 		time.sleep(1)
