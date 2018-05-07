@@ -2,4 +2,4 @@
 import time
 from grovepi import *
 
-print "Hej!"
+print "Hej Marcus!"
