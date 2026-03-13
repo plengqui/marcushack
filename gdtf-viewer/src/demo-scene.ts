@@ -20,9 +20,11 @@ export async function generateDemoMvr(): Promise<ArrayBuffer> {
   const parGdtf = buildParGdtf();
   const trussGdtf = buildTrussGdtf();
 
-  zip.file('MovingHead.gdtf', movingHeadGdtf);
-  zip.file('PARFixture.gdtf', parGdtf);
-  zip.file('Truss290.gdtf', trussGdtf);
+  // Naming convention per DIN SPEC 15800: <Manufacturer>@<FixtureName>.gdtf
+  // GDTFSpec references in MVR omit the .gdtf extension per DIN SPEC 15801
+  zip.file('DemoCo@MovingHead.gdtf', movingHeadGdtf);
+  zip.file('DemoCo@PARFixture.gdtf', parGdtf);
+  zip.file('DemoTruss@Truss290.gdtf', trussGdtf);
 
   const xml = buildSceneXml();
   zip.file('GeneralSceneDescription.xml', xml);
@@ -226,7 +228,9 @@ function buildSceneXml(): string {
   function matrix(x: number, y: number, z: number, rotZ = 0): string {
     const c = Math.cos(rotZ);
     const s = Math.sin(rotZ);
-    // u = right, v = up, w = forward (all in mm already from caller)
+    // MVR matrix: {u=right}{v=forward}{w=up}{o=origin mm}
+    // Identity (no rotation): u={1,0,0} v={0,1,0} w={0,0,1}
+    // Z-rotation by rotZ: u rotates in XY plane, v follows, w stays vertical
     return `{${c},${s},0}{${-s},${c},0}{0,0,1}{${x},${y},${z}}`;
   }
 
@@ -262,7 +266,7 @@ function buildSceneXml(): string {
     return `
         <Truss name="${name}" uuid="${uuid}">
           <Matrix>${matrix(x, y, z)}</Matrix>
-          <GDTFSpec>Truss290.gdtf</GDTFSpec>
+          <GDTFSpec>DemoTruss@Truss290</GDTFSpec>
           <GDTFMode>Default</GDTFMode>
           <Function>Lighting Truss</Function>
         </Truss>`;
@@ -278,7 +282,7 @@ function buildSceneXml(): string {
   const frontPositions = [-4000, -2500, -1200, 0, 1200, 2500, 4000];
   frontPositions.forEach((x, i) => {
     fixtures.push(
-      makeFixture(`MH ${i + 1}`, 'MovingHead.gdtf', 'Default', x, 0, 6000),
+      makeFixture(`MH ${i + 1}`, 'DemoCo@MovingHead', 'Default', x, 0, 6000),
     );
   });
 
@@ -289,7 +293,7 @@ function buildSceneXml(): string {
   // 4 moving heads on mid truss
   [-2500, -800, 800, 2500].forEach((x, i) => {
     fixtures.push(
-      makeFixture(`MH Mid ${i + 1}`, 'MovingHead.gdtf', 'Default', x, -3000, 6500),
+      makeFixture(`MH Mid ${i + 1}`, 'DemoCo@MovingHead', 'Default', x, -3000, 6500),
     );
   });
 
@@ -300,7 +304,7 @@ function buildSceneXml(): string {
   // 6 PAR fixtures on rear truss
   [-2500, -1500, -500, 500, 1500, 2500].forEach((x, i) => {
     fixtures.push(
-      makeFixture(`PAR ${i + 1}`, 'PARFixture.gdtf', 'Default', x, -6000, 7000),
+      makeFixture(`PAR ${i + 1}`, 'DemoCo@PARFixture', 'Default', x, -6000, 7000),
     );
   });
 

@@ -308,11 +308,16 @@ export async function parseMvr(
       file.async('arraybuffer').then(data => {
         const lc = relativePath.toLowerCase();
         if (lc.endsWith('.gdtf')) {
-          // Store by basename for easy lookup
+          // Store by basename (with extension)
           const baseName = relativePath.split('/').pop() ?? relativePath;
           gdtfFiles.set(baseName, data);
+          // Also store without extension (MVR GDTFSpec omits .gdtf per spec)
+          const nameNoExt = baseName.replace(/\.gdtf$/i, '');
+          gdtfFiles.set(nameNoExt, data);
           // Also store by full path
-          if (baseName !== relativePath) gdtfFiles.set(relativePath, data);
+          if (baseName !== relativePath) {
+            gdtfFiles.set(relativePath, data);
+          }
         } else {
           auxFiles.set(relativePath, data);
         }

@@ -5,13 +5,20 @@
 
 // ─── MVR Types ────────────────────────────────────────────────────────────────
 
-/** 4×4 transformation matrix from MVR {u}{v}{w}{o} format, in millimetres */
+/**
+ * 4×4 transformation matrix from MVR {u}{v}{w}{o} format, in millimetres.
+ * MVR coordinate system is Z-up, right-handed:
+ *   u = right  (local X axis in MVR world)
+ *   v = forward (local Y axis, depth into stage)
+ *   w = up      (local Z axis → maps to Three.js Y after root group -90° X rotation)
+ *   o = origin / translation (millimetres)
+ */
 export interface MvrMatrix {
-  /** Right vector (local X axis) */
+  /** Right vector (local X axis in MVR Z-up space) */
   u: [number, number, number];
-  /** Up vector (local Y axis) */
+  /** Forward/depth vector (local Y axis in MVR Z-up space) */
   v: [number, number, number];
-  /** At/look-at vector (local Z axis) */
+  /** Up vector (local Z axis in MVR Z-up space) */
   w: [number, number, number];
   /** Origin / translation, millimetres */
   o: [number, number, number];

@@ -158,7 +158,20 @@ export class GdtfViewer {
     for (const gdtfFilename of gdtfRefs) {
       gdtfIdx++;
       onProgress?.(`Loading GDTF ${gdtfIdx}/${gdtfRefs.size}: ${gdtfFilename}…`);
-      const data = mvrScene.gdtfFiles.get(gdtfFilename);
+
+      // Per DIN SPEC 15801, GDTFSpec may omit the .gdtf extension.
+      // Try both with and without extension.
+      const candidates = [
+        gdtfFilename,
+        `${gdtfFilename}.gdtf`,
+        gdtfFilename.replace(/\.gdtf$/i, ''),
+      ];
+      let data: ArrayBuffer | undefined;
+      for (const c of candidates) {
+        data = mvrScene.gdtfFiles.get(c);
+        if (data) break;
+      }
+
       if (!data) {
         console.warn(`GDTF file not found in archive: ${gdtfFilename}`);
         continue;
