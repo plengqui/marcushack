@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GDTF Stage Lighting Rig Viewer</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Drop zone / welcome screen -->
+      <div id="drop-zone">
+        <div class="drop-content">
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/>
+            </svg>
+          </div>
+          <h1>GDTF Stage Lighting Rig Viewer</h1>
+          <p class="subtitle">Drop an <strong>.mvr</strong> file here to visualise your stage rig in 3D</p>
+          <p class="hint">Supports MVR (DIN SPEC 15801) with embedded GDTF (DIN SPEC 15800) fixture data</p>
+          <button id="browse-btn" class="browse-btn">Browse for .mvr file</button>
+          <input type="file" id="file-input" accept=".mvr" style="display:none" />
+          <div class="demo-section">
+            <span class="demo-divider">or</span>
+            <button id="demo-btn" class="demo-btn">Load Demo Scene</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main viewer layout (hidden until file loaded) -->
+      <div id="viewer-layout" class="hidden">
+        <!-- Top toolbar -->
+        <header id="toolbar">
+          <div class="toolbar-left">
+            <div class="app-logo">💡 Rig Viewer</div>
+            <span id="scene-name" class="scene-name">Untitled Scene</span>
+          </div>
+          <div class="toolbar-center">
+            <button class="tool-btn active" id="btn-orbit" title="Orbit (O)">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.5 5.969 6.5 6v.5a.5.5 0 00.5.5h.5A1.5 1.5 0 019 8.5V9a.5.5 0 00.5.5 1 1 0 011 1v.5A1.5 1.5 0 009 12.5V13a.5.5 0 01-.5.5h-1a.5.5 0 00-.5.5v.75a6.03 6.03 0 01-2.668-6.723z"/></svg>
+              Orbit
+            </button>
+            <button class="tool-btn" id="btn-reset" title="Reset Camera (R)">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0V5.36l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.31h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clip-rule="evenodd"/></svg>
+              Reset View
+            </button>
+            <button class="tool-btn" id="btn-top" title="Top View (T)">Top</button>
+            <button class="tool-btn" id="btn-front" title="Front View (F)">Front</button>
+            <button class="tool-btn" id="btn-side" title="Side View (S)">Side</button>
+          </div>
+          <div class="toolbar-right">
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-grid" checked />
+              Grid
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-beams" />
+              Light Beams
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-labels" />
+              Labels
+            </label>
+            <button class="tool-btn" id="btn-load-new">Open New File</button>
+          </div>
+        </header>
+
+        <!-- Content area -->
+        <div id="content">
+          <!-- Scene tree sidebar -->
+          <aside id="sidebar">
+            <div class="sidebar-header">
+              <h3>Scene Layers</h3>
+              <div class="sidebar-actions">
+                <button class="icon-btn" id="btn-expand-all" title="Expand all">⊞</button>
+                <button class="icon-btn" id="btn-collapse-all" title="Collapse all">⊟</button>
+              </div>
+            </div>
+            <div id="scene-tree" class="scene-tree"></div>
+
+            <!-- Stats panel -->
+            <div id="stats-panel" class="stats-panel">
+              <h4>Scene Statistics</h4>
+              <div id="stats-content"></div>
+            </div>
+          </aside>
+
+          <!-- 3D viewport -->
+          <main id="viewport-container">
+            <canvas id="viewport"></canvas>
+            <div id="loading-overlay" class="loading-overlay hidden">
+              <div class="spinner"></div>
+              <div id="loading-text">Loading scene…</div>
+            </div>
+            <div id="selection-info" class="selection-info hidden"></div>
+            <div id="viewport-info" class="viewport-info">
+              Scroll to zoom · Drag to orbit · Right-drag to pan
+            </div>
+          </main>
+
+          <!-- Properties panel -->
+          <aside id="properties-panel" class="properties-panel">
+            <div class="panel-header">
+              <h3>Properties</h3>
+            </div>
+            <div id="properties-content" class="empty-state">
+              <p>Select an object to view properties</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
