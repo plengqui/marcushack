@@ -1,0 +1,4 @@
+[build]
+  base    = "gdtf-viewer"
+  command = "npm run build"
+  publish = "dist"
