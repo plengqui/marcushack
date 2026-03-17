@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Soundboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #0f0f1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #e0e0ff;
+      font-size: 1.4rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      opacity: 0.85;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .btn {
+      position: relative;
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      outline: none;
+    }
+
+    .btn:active,
+    .btn.playing {
+      transform: scale(0.92);
+      filter: brightness(1.3);
+      box-shadow: 0 0 18px var(--glow);
+    }
+
+    .btn .letter {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      line-height: 1;
+    }
+
+    .btn .label {
+      font-size: 0.45rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    /* Color themes per button */
+    .btn:nth-child(1)  { background: linear-gradient(135deg, #f72585, #b5179e); --glow: #f72585; }
+    .btn:nth-child(2)  { background: linear-gradient(135deg, #7209b7, #560bad); --glow: #7209b7; }
+    .btn:nth-child(3)  { background: linear-gradient(135deg, #3a0ca3, #4361ee); --glow: #4361ee; }
+    .btn:nth-child(4)  { background: linear-gradient(135deg, #4cc9f0, #4895ef); --glow: #4cc9f0; }
+    .btn:nth-child(5)  { background: linear-gradient(135deg, #06d6a0, #1b9aaa); --glow: #06d6a0; }
+    .btn:nth-child(6)  { background: linear-gradient(135deg, #ffbe0b, #fb8500); --glow: #ffbe0b; }
+    .btn:nth-child(7)  { background: linear-gradient(135deg, #ff006e, #8338ec); --glow: #ff006e; }
+    .btn:nth-child(8)  { background: linear-gradient(135deg, #3d85c8, #0d47a1); --glow: #3d85c8; }
+    .btn:nth-child(9)  { background: linear-gradient(135deg, #e63946, #c1121f); --glow: #e63946; }
+    .btn:nth-child(10) { background: linear-gradient(135deg, #2dc653, #007f5f); --glow: #2dc653; }
+    .btn:nth-child(11) { background: linear-gradient(135deg, #ff9f1c, #e71d36); --glow: #ff9f1c; }
+    .btn:nth-child(12) { background: linear-gradient(135deg, #9b5de5, #f15bb5); --glow: #9b5de5; }
+    .btn:nth-child(13) { background: linear-gradient(135deg, #00bbf9, #00f5d4); --glow: #00f5d4; }
+    .btn:nth-child(14) { background: linear-gradient(135deg, #fee440, #f15bb5); --glow: #fee440; }
+    .btn:nth-child(15) { background: linear-gradient(135deg, #80b918, #2d6a4f); --glow: #80b918; }
+
+    @media (min-width: 420px) {
+      .btn .letter { font-size: 1.8rem; }
+      .btn .label  { font-size: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Soundboard</h1>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const sounds = [
+      { letter: 'A', label: 'Blip',     fn: (ctx) => synth(ctx, 'sine',   880,  0.18, 'blip')     },
+      { letter: 'B', label: 'Buzz',     fn: (ctx) => synth(ctx, 'sawtooth',110, 0.3,  'buzz')     },
+      { letter: 'C', label: 'Chime',    fn: (ctx) => chime(ctx, 1046.5)                            },
+      { letter: 'D', label: 'Drop',     fn: (ctx) => sweep(ctx, 440, 55,  0.4,  'sine')            },
+      { letter: 'E', label: 'Ping',     fn: (ctx) => ping(ctx, 1320)                               },
+      { letter: 'F', label: 'Fuzz',     fn: (ctx) => synth(ctx, 'square', 80,   0.25, 'fuzz')      },
+      { letter: 'G', label: 'Glitch',   fn: (ctx) => glitch(ctx)                                   },
+      { letter: 'H', label: 'Hit',      fn: (ctx) => kick(ctx)                                     },
+      { letter: 'I', label: 'Rise',     fn: (ctx) => sweep(ctx, 110, 880, 0.35, 'sine')            },
+      { letter: 'J', label: 'Jingle',   fn: (ctx) => jingle(ctx)                                   },
+      { letter: 'K', label: 'Knock',    fn: (ctx) => knock(ctx)                                    },
+      { letter: 'L', label: 'Laser',    fn: (ctx) => sweep(ctx, 1800, 200, 0.25, 'sawtooth')       },
+      { letter: 'M', label: 'Major',    fn: (ctx) => chord(ctx, [261.6, 329.6, 392.0])             },
+      { letter: 'N', label: 'Noise',    fn: (ctx) => noise(ctx, 0.3)                               },
+      { letter: 'O', label: 'Whoosh',   fn: (ctx) => whoosh(ctx)                                   },
+    ];
+
+    // --- Sound generators ---
+
+    function synth(ctx, type, freq, dur, shape) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + dur);
+    }
+
+    function sweep(ctx, startF, endF, dur, type) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(startF, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(endF, ctx.currentTime + dur);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + dur);
+    }
+
+    function ping(ctx, freq) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.6, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+    }
+
+    function chime(ctx, freq) {
+      [0, 0.1, 0.22].forEach((t, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq * [1, 1.25, 1.5][i];
+        gain.gain.setValueAtTime(0.35, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.55);
+      });
+    }
+
+    function jingle(ctx) {
+      [0, 0.12, 0.24, 0.36].forEach((t, i) => {
+        const freqs = [523.25, 659.25, 783.99, 1046.5];
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freqs[i];
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.3);
+      });
+    }
+
+    function chord(ctx, freqs) {
+      freqs.forEach(f => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = f;
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.75);
+      });
+    }
+
+    function kick(ctx) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    }
+
+    function knock(ctx) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(120, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.8, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    }
+
+    function noise(ctx, dur) {
+      const bufSize = ctx.sampleRate * dur;
+      const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer = buffer;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      src.start();
+    }
+
+    function glitch(ctx) {
+      for (let i = 0; i < 6; i++) {
+        const t = i * 0.04;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 200 + Math.random() * 1200;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.03);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.04);
+      }
+    }
+
+    function whoosh(ctx) {
+      const bufSize = ctx.sampleRate * 0.5;
+      const buffer = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(200, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + 0.4);
+      filter.Q.value = 0.5;
+      gain.gain.setValueAtTime(0.6, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      src.buffer = buffer;
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      src.start();
+    }
+
+    // --- Build UI ---
+    const grid = document.getElementById('grid');
+    let audioCtx = null;
+
+    sounds.forEach(({ letter, label, fn }, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.innerHTML = `<span class="letter">${letter}</span><span class="label">${label}</span>`;
+
+      const play = () => {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        fn(audioCtx);
+        btn.classList.add('playing');
+        setTimeout(() => btn.classList.remove('playing'), 150);
+      };
+
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); play(); }, { passive: false });
+      btn.addEventListener('click', play);
+      grid.appendChild(btn);
+    });
+  </script>
+</body>
+</html>
