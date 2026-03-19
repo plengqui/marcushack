@@ -1,0 +1,20 @@
+{
+  "name": "gdtf-viewer",
+  "version": "1.0.0",
+  "description": "Browser-based 3D stage lighting rig viewer using GDTF/MVR standards",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.171.0",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.171.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.1.0"
+  }
+}
