@@ -220,6 +220,7 @@ async function loadFile(
 ) {
   setVisible('drop-zone', false);
   setVisible('viewer-layout', true);
+  viewer.resize();
   showLoading('Parsing MVR…');
 
   try {

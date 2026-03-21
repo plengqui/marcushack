@@ -333,14 +333,19 @@ export class GdtfViewer {
 
   // ─── Resize ─────────────────────────────────────────────────────────────────
 
-  private onResize() {
+  resize() {
     const container = this.renderer.domElement.parentElement;
     if (!container) return;
     const w = container.clientWidth;
     const h = container.clientHeight;
+    if (w === 0 || h === 0) return;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
+  }
+
+  private onResize() {
+    this.resize();
   }
 
   getLayerNames(): string[] {
